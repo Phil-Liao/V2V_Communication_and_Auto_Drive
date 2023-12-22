@@ -14,7 +14,7 @@ server.listen()
 
 # Lists For Clients and Their Nicknames
 clients = []
-nicknames = []
+usernames = []
 
 #Recieve Messages From One Connected Client
 def receive(sender:socket, HEADER=HEADER, FORMAT=FORMAT) -> str:
@@ -34,7 +34,7 @@ def broadcast(clients:list, message:str, FORMAT=FORMAT):
 
 
 # Handling Messages From Clients
-recipiant_nickname = ''
+recipiant_username = ''
 def handle(client):
     while True:
         try:
@@ -47,19 +47,19 @@ def handle(client):
             # Recieving and Broadcasting Messages
             message = receive(client)
             if (message[:2] == '@!') and (message[-2:] == '!@'):
-                recipiant_nickname = message[2:-2]
-                print('recipiant, not actual message')
+                recipiant_username = message[2:-2]
+                #print('recipiant, not actual message')
                 message = ''
-            elif recipiant_nickname == '#ALL#':
+            elif recipiant_username == '#ALL#':
                 print(message)
-                print(nicknames)
+                print(usernames)
                 broadcast(clients, message)
-                recipiant_nickname = ''
-            elif recipiant_nickname in nicknames:
+                recipiant_username = ''
+            elif recipiant_username in usernames:
                 print(message)
-                recipiant_socket = clients[nicknames.index(recipiant_nickname)]
+                recipiant_socket = clients[usernames.index(recipiant_username)]
                 send_to_one(recipiant_socket, message)
-                recipiant_nickname = ''
+                recipiant_username = ''
 
             
 
@@ -74,9 +74,9 @@ def handle(client):
             index = clients.index(client)
             clients.remove(client)
             client.close()
-            nickname = nicknames[index]
-            broadcast(clients, '{} left!'.format(nickname))
-            nicknames.remove(nickname)
+            username = usernames[index]
+            broadcast(clients, '{} left!'.format(username))
+            usernames.remove(username)
             break
 
 # Receiving / Listening Function
@@ -86,19 +86,20 @@ def listen():
         client, address = server.accept()
         print(f"Connected with {str(address)}")
 
-        # Request And Store Nickname
-        send_to_one(client, 'NICK')
-        nickname = receive(client)
-        nicknames.append(nickname)
+        # Request And Store Username
+        send_to_one(client, 'USERNAME')
+        username = receive(client)
+        usernames.append(username)
         clients.append(client)
 
         # Print and Broadcast Nickname
-        print(f"Nickname is {nickname}")
-        broadcast(clients, f"{nickname} joined!")
+        print(f"Username is {username}")
+        broadcast(clients, f"{username} joined!")
         send_to_one(client, 'Connected to server!')
 
         # Start Handling Thread for Client
         thread = threading.Thread(target=handle, args=(client,))
         thread.start()
+        print(f'Handle thread for nickname: {username} started.')
 
 listen()
