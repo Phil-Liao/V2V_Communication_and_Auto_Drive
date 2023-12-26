@@ -38,12 +38,6 @@ recipiant_username = ''
 def handle(client):
     while True:
         try:
-
-
-
-
-
-
             # Recieving and Broadcasting Messages
             message = receive(client)
             if (message[:2] == '@!') and (message[-2:] == '!@'):
@@ -60,15 +54,6 @@ def handle(client):
                 recipiant_socket = clients[usernames.index(recipiant_username)]
                 send_to_one(recipiant_socket, message)
                 recipiant_username = ''
-
-            
-
-        
-        
-        
-        
-        
-        
         except:
             # Removing and Closing Clients
             index = clients.index(client)
@@ -96,6 +81,7 @@ def listen():
         print(f"Username is {username}")
         broadcast(clients, f"{username} joined!")
         send_to_one(client, 'Connected to server!')
+
 
         # Start Handling Thread for Client
         thread = threading.Thread(target=handle, args=(client,))

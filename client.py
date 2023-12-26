@@ -1,5 +1,9 @@
+from collections.abc import Callable, Iterable, Mapping
 import socket
 import threading
+from typing import Any
+import modified_thread
+
 
 SERVER = '127.0.0.1'
 PORT = 7777
@@ -9,6 +13,10 @@ HEADER = 1024
 
 # Choosing Username
 username = input("Choose your username: ")
+
+
+
+
 
 
 
@@ -47,7 +55,7 @@ def handle(client:socket, username:str=username, FORMAT:str=FORMAT, HEADER:int=H
             if message == 'USERNAME':
                 client.send(username.encode(FORMAT))
             else:
-                print(message)
+                return message
         except:
             # Close Connection When Error
             print("An error occured!")
@@ -55,20 +63,24 @@ def handle(client:socket, username:str=username, FORMAT:str=FORMAT, HEADER:int=H
             break
 
 
-def start_connection(SERVER:str=SERVER, PORT:int=PORT, FORMAT:str=FORMAT, HEADER:int=HEADER):
+def start_connection(recieved_data, SERVER:str=SERVER, PORT:int=PORT, FORMAT:str=FORMAT, HEADER:int=HEADER):
     
 
     # Connecting To Server
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((SERVER, PORT))    
 
-    # Starting Threads for Listening and Writing
-    handle_thread = threading.Thread(target=handle, args=(client, username, FORMAT, HEADER))
-    handle_thread.start()
-
     write_thread = threading.Thread(target=write, args=(client, username, FORMAT))
     write_thread.start()
+    
+    while True:
+        # Starting Threads for Listening and Writing
+        handle_thread = modified_thread.CustomThread(target=handle, args=(client, username, FORMAT, HEADER))
+        
+        handle_thread.start()
+        handle_thread.join()
+        print(handle_thread.join())
 
 
-
-start_connection()
+received_data = ''
+start_connection(received_data)
