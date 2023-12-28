@@ -3,7 +3,7 @@ import threading
 
 # Connection Data
 SERVER = '127.0.0.1'
-PORT = 7777
+PORT = 7778
 FORMAT = 'ascii'
 HEADER = 1024
 

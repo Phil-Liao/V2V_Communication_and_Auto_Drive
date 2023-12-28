@@ -1,12 +1,11 @@
 from collections.abc import Callable, Iterable, Mapping
 import socket
 import threading
-from typing import Any
 import modified_thread
 
 
 SERVER = '127.0.0.1'
-PORT = 7777
+PORT = 7778
 FORMAT = 'ascii'
 HEADER = 1024
 
@@ -14,11 +13,15 @@ HEADER = 1024
 # Choosing Username
 username = input("Choose your username: ")
 
-
-
-
-
-
+def start_connection(SERVER=SERVER, PORT=PORT): # Connecting To Server
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect((SERVER, PORT))   
+    return client
+def end_connection(client, SERVER, PORT, restart=False):
+    print("An error occured!")
+    client.close()
+    if restart:
+        start_connection(SERVER, PORT)
 
 # Recieving Messages from Server
 def receive(sender:socket, HEADER:int=HEADER, FORMAT:str=FORMAT) -> str:
@@ -57,23 +60,21 @@ def handle(client:socket, username:str=username, FORMAT:str=FORMAT, HEADER:int=H
             else:
                 return message
         except:
-            # Close Connection When Error
-            print("An error occured!")
-            client.close()
+            end_connection(client, restart=True)
             break
 
 
-def start_connection(recieved_data, SERVER:str=SERVER, PORT:int=PORT, FORMAT:str=FORMAT, HEADER:int=HEADER):
+def conn(SERVER:str=SERVER, PORT:int=PORT, FORMAT:str=FORMAT, HEADER:int=HEADER):
     
 
     # Connecting To Server
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((SERVER, PORT))    
+    client = start_connection(SERVER, PORT)   
 
     write_thread = threading.Thread(target=write, args=(client, username, FORMAT))
     write_thread.start()
     
     while True:
+        
         # Starting Threads for Listening and Writing
         handle_thread = modified_thread.CustomThread(target=handle, args=(client, username, FORMAT, HEADER))
         
@@ -82,5 +83,5 @@ def start_connection(recieved_data, SERVER:str=SERVER, PORT:int=PORT, FORMAT:str
         print(handle_thread.join())
 
 
-received_data = ''
-start_connection(received_data)
+
+conn()
