@@ -1,91 +1,56 @@
 import socket
 import threading
-
 # Connection Data
-SERVER = '127.0.0.1'
-PORT = 7778
-FORMAT = 'ascii'
-HEADER = 1024
+host = '127.0.0.1'
+port = 7777
 
 # Starting Server
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind((SERVER, PORT))
+server.bind((host, port))
 server.listen()
 
 # Lists For Clients and Their Nicknames
 clients = []
-usernames = []
-
-#Recieve Messages From One Connected Client
-def receive(sender:socket, HEADER=HEADER, FORMAT=FORMAT) -> str:
-    message = sender.recv(HEADER).decode(FORMAT)
-    return message
-
-#Sending Messages To One Connected Client
-def send_to_one(recipiant:socket, message:str, FORMAT=FORMAT):
-    message = message.encode(FORMAT)
-    recipiant.send(message)
-
+nicknames = []
 # Sending Messages To All Connected Clients
-def broadcast(clients:list, message:str, FORMAT=FORMAT):
-    message = message.encode(FORMAT)
+def broadcast(message):
     for client in clients:
         client.send(message)
-
-
 # Handling Messages From Clients
-recipiant_username = ''
 def handle(client):
     while True:
         try:
-            # Recieving and Broadcasting Messages
-            message = receive(client)
-            if (message[:2] == '@!') and (message[-2:] == '!@'):
-                recipiant_username = message[2:-2]
-                #print('recipiant, not actual message')
-                message = ''
-            elif recipiant_username == '#ALL#':
-                print(message)
-                print(usernames)
-                broadcast(clients, message)
-                recipiant_username = ''
-            elif recipiant_username in usernames:
-                print(message)
-                recipiant_socket = clients[usernames.index(recipiant_username)]
-                send_to_one(recipiant_socket, message)
-                recipiant_username = ''
+            # Broadcasting Messages
+            message = client.recv(1024)
+            broadcast(message)
         except:
-            # Removing and Closing Clients
+            # Removing And Closing Clients
             index = clients.index(client)
             clients.remove(client)
             client.close()
-            username = usernames[index]
-            broadcast(clients, '{} left!'.format(username))
-            usernames.remove(username)
+            nickname = nicknames[index]
+            broadcast('{} left!'.format(nickname).encode('ascii'))
+            nicknames.remove(nickname)
             break
-
 # Receiving / Listening Function
-def listen():
+def receive():
     while True:
         # Accept Connection
         client, address = server.accept()
-        print(f"Connected with {str(address)}")
+        print("Connected with {}".format(str(address)))
 
-        # Request And Store Username
-        send_to_one(client, 'USERNAME')
-        username = receive(client)
-        usernames.append(username)
+        # Request And Store Nickname
+        client.send('NICK'.encode('ascii'))
+        nickname = client.recv(1024).decode('ascii')
+        nicknames.append(nickname)
         clients.append(client)
 
-        # Print and Broadcast Nickname
-        print(f"Username is {username}")
-        broadcast(clients, f"{username} joined!")
-        send_to_one(client, 'Connected to server!')
+        # Print And Broadcast Nickname
+        print("Nickname is {}".format(nickname))
+        broadcast("{} joined!".format(nickname).encode('ascii'))
+        client.send('Connected to server!'.encode('ascii'))
 
-
-        # Start Handling Thread for Client
+        # Start Handling Thread For Client
         thread = threading.Thread(target=handle, args=(client,))
-        thread.start()
-        print(f'Handle thread for nickname: {username} started.')
-
-listen()
+        thread.start()        
+receive()
