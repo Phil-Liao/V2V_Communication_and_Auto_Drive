@@ -32,8 +32,10 @@ class conn:
     def receive_from_server(self) -> str: # Receive Data from Server
         _data = self.client.recv(self.HEADER)
         _data = _data.decode(self.FORMAT)
+        _data = eval(_data)
         return _data
-    def send_to_server(self, data:str) -> None: # Send Data to Server
+    def send_to_server(self, data:list) -> None: # Send Data to Server
+        data = str(data)
         data = data.encode(FORMAT)
         self.client.send(data)
         print(f'[SENT] Message successfully sent to SERVER:{self.SERVER}.')
@@ -52,6 +54,7 @@ class conn:
     def test_write(self) -> None: # Inputting String Data
         while True:
             _message = '{}: {}'.format(username, input(''))
+            _message = list(_message)
             self.send_to_server(_message)
 
 
