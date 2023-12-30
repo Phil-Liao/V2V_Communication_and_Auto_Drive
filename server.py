@@ -1,5 +1,6 @@
 import socket
 import threading
+import json
 
 # Connection Data
 HOST = '127.0.0.1'
@@ -8,9 +9,10 @@ HEADER = 1024
 FORMAT = 'ascii'
 
 
+KEY_FILE = open('keys.json')
+KEYS = json.load(KEY_FILE)
+KEY_FILE.close()
 
-
-KEYS = {'USERNAME_KEY':'USERNAME'}
 class central_server:
     def __init__(self, clients:list[socket.socket], usernames:list[str], HOST:str=HOST, PORT:int=PORT, HEADER:int=HEADER, FORMAT:str=FORMAT, KEYS:dict[str, str]=KEYS) -> None:
         self.clients = clients

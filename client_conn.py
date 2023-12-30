@@ -1,6 +1,7 @@
 import socket
 import threading
 import modified_thread
+import json
 
 SERVER = '127.0.0.1'
 PORT = 7777
@@ -8,8 +9,9 @@ HEADER = 1024
 FORMAT = 'ascii'
 
 
-
-KEYS = {'USERNAME_KEY':'USERNAME'}
+KEY_FILE = open('keys.json')
+KEYS = json.load(KEY_FILE)
+KEY_FILE.close()
 class conn:
     def __init__(self, username:str, SERVER:str=SERVER, PORT:int=PORT, HEADER:int=HEADER, FORMAT:str=FORMAT, KEYS:dict[str, str]=KEYS) -> None:
         self.username = username
