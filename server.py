@@ -8,13 +8,16 @@ PORT = 7777
 HEADER = 1024
 FORMAT = 'ascii'
 
+SERVER_SETTINGS_FILE = open('server_settings.json')
+SERVER_SETTINGS = json.load(SERVER_SETTINGS_FILE)
+SERVER_SETTINGS_FILE.close()
 
 KEY_FILE = open('keys.json')
 KEYS = json.load(KEY_FILE)
 KEY_FILE.close()
 
 class central_server:
-    def __init__(self, clients:list[socket.socket], usernames:list[str], HOST:str=HOST, PORT:int=PORT, HEADER:int=HEADER, FORMAT:str=FORMAT, KEYS:dict[str, str]=KEYS) -> None:
+    def __init__(self, clients:list[socket.socket], usernames:list[str], HOST:str=SERVER_SETTINGS['SERVER'], PORT:int=SERVER_SETTINGS['PORT'], HEADER:int=SERVER_SETTINGS['HEADER'], FORMAT:str=SERVER_SETTINGS['FORMAT'], KEYS:dict[str, str]=KEYS) -> None:
         self.clients = clients
         self.usernames = usernames
         self.HOST = HOST
@@ -81,5 +84,5 @@ class central_server:
 # Lists for Clients and Their Usernames
 clients = []
 usernames = []
-conn = central_server(clients, usernames, HOST, PORT, HEADER, FORMAT, KEYS)
+conn = central_server(clients, usernames, SERVER_SETTINGS['SERVER'], SERVER_SETTINGS['PORT'], SERVER_SETTINGS['HEADER'], SERVER_SETTINGS['FORMAT'], KEYS)
 conn.add_client()

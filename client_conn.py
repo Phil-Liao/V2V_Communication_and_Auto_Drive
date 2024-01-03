@@ -18,7 +18,7 @@ KEY_FILE = open('keys.json')
 KEYS = json.load(KEY_FILE)
 KEY_FILE.close()
 class conn:
-    def __init__(self, username:str, SERVER:str=SERVER_SETTINGS['SERVER'], PORT:int=SERVER_SETTINGS['PORT'], HEADER:int=SERVER_SETTINGS['HEADER'], FORMAT:str=SERVER_SETTINGS['FORMAT'], KEYS:dict[str, str]=KEYS['USERNAME_KEY']) -> None:
+    def __init__(self, username:str, SERVER:str=SERVER_SETTINGS['SERVER'], PORT:int=SERVER_SETTINGS['PORT'], HEADER:int=SERVER_SETTINGS['HEADER'], FORMAT:str=SERVER_SETTINGS['FORMAT'], KEYS:dict[str, str]=KEYS) -> None:
         self.username = username
         self.SERVER = SERVER
         self.PORT = PORT
