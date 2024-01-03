@@ -41,7 +41,7 @@ class conn:
         return _data
     def send_to_server(self, data:list) -> None: # Send Data to Server
         data = str(data)
-        data = data.encode(FORMAT)
+        data = data.encode(self.FORMAT)
         self.client.send(data)
         print(f'[SENT] Message successfully sent to SERVER:{self.SERVER}.')
     def handle(self) -> str or bool: # Listening to Server and Sending Nickname
