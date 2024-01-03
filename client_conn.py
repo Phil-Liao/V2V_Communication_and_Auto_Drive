@@ -8,12 +8,15 @@ PORT = 7777
 HEADER = 1024
 FORMAT = 'ascii'
 
+SERVER_SETTINGS_FILE = open('server_settings.json')
+SERVER_SETTINGS = json.load(SERVER_SETTINGS_FILE)
+SERVER_SETTINGS_FILE.close()
 
 KEY_FILE = open('keys.json')
 KEYS = json.load(KEY_FILE)
 KEY_FILE.close()
 class conn:
-    def __init__(self, username:str, SERVER:str=SERVER, PORT:int=PORT, HEADER:int=HEADER, FORMAT:str=FORMAT, KEYS:dict[str, str]=KEYS) -> None:
+    def __init__(self, username:str, SERVER:str=SERVER_SETTINGS['SERVER'], PORT:int=SERVER_SETTINGS['PORT'], HEADER:int=SERVER_SETTINGS['HEADER'], FORMAT:str=SERVER_SETTINGS['FORMAT'], KEYS:dict[str, str]=KEYS['USERNAME_KEY']) -> None:
         self.username = username
         self.SERVER = SERVER
         self.PORT = PORT
@@ -46,7 +49,6 @@ class conn:
                 if message == self.KEYS['USERNAME_KEY']:
                     self.send_to_server(self.username)
                 else:
-                    #print(message)
                     return message
             except:
                 print("An error occured!")
@@ -62,7 +64,7 @@ class conn:
 
 username = input("Input username: ")
 
-connection = conn(username, SERVER, PORT, HEADER, FORMAT)
+connection = conn(username, SERVER_SETTINGS['SERVER'], SERVER_SETTINGS['PORT'], SERVER_SETTINGS['HEADER'], SERVER_SETTINGS['FORMAT'])
 
 test_write_thread = threading.Thread(target=connection.test_write, )
 test_write_thread.start()
