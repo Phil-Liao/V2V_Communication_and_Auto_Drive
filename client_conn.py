@@ -3,10 +3,12 @@ import threading
 import modified_thread
 import json
 
+"""
 SERVER = '127.0.0.1'
 PORT = 7777
 HEADER = 1024
 FORMAT = 'ascii'
+"""
 
 SERVER_SETTINGS_FILE = open('server_settings.json')
 SERVER_SETTINGS = json.load(SERVER_SETTINGS_FILE)
