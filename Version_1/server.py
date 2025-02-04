@@ -10,11 +10,11 @@ HEADER = 1024
 FORMAT = 'ascii'
 """
 
-SERVER_SETTINGS_FILE = open('server_settings.json')
+SERVER_SETTINGS_FILE = open('Version_1/server_settings.json')
 SERVER_SETTINGS = json.load(SERVER_SETTINGS_FILE)
 SERVER_SETTINGS_FILE.close()
 
-KEY_FILE = open('keys.json')
+KEY_FILE = open('Version_1/keys.json')
 KEYS = json.load(KEY_FILE)
 KEY_FILE.close()
 
