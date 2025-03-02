@@ -9,7 +9,7 @@ nickname = 'B' #Name of the Car
 
 # Connecting To Server
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(('192.168.50.40', 8888))
+client.connect(('192.168.50.40', 7777))
 
 # Listening to Server and Sending Nickname
 def receive():
@@ -118,8 +118,8 @@ while cap.isOpened():
 
         cv2.putText(frame, text1, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
         cv2.putText(frame, text2, (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-
-        write_to_server(str((round(x*100, 1), round(y*100, 1), round(pitch, 1))))
+        data_to_server = '('+str(round(x*100, 1))+','+str(round(y*100, 1))+','+str(round(pitch, 1))+')'
+        write_to_server(data_to_server)
         
 
     # 顯示影像
