@@ -16,9 +16,9 @@ GRASS_COLOR = (34, 139, 34)
 
 # Object positions
 CAR_WIDTH, CAR_HEIGHT = 120, 60
-car_a_pos = (150, HEIGHT // 2 + 95)
-car_b_pos = (400, HEIGHT // 2 + 20)
-pedestrian_pos = (650, HEIGHT // 2)
+car_a_pos = (150, HEIGHT // (5.5/3))
+car_b_pos = (400, HEIGHT // (4.05/3))
+pedestrian_pos = (650, int(HEIGHT *10/11))
 
 # Create window
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
