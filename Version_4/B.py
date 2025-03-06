@@ -48,13 +48,13 @@ dist_coeffs = np.array([[3.74005891e-02, -1.96034587e+00 ,-2.19501972e-03  ,2.93
    ,2.10149607e+01]]) # 假設無畸變，若有請填入相機校正值
 
 # 設定 AprilTag 大小 (單位：公尺)
-tag_size = 0.1016  # 10cm
+tag_size = 0.056  # 5.6cm
 
 # 初始化 AprilTag 偵測器
 detector = apriltag.Detector(families='tag36h11')
 
 # 開啟攝影機
-cap = cv2.VideoCapture(1)  # 0 代表預設攝影機
+cap = cv2.VideoCapture(0)  # 0 代表預設攝影機
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -118,7 +118,7 @@ while cap.isOpened():
 
         cv2.putText(frame, text1, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
         cv2.putText(frame, text2, (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-        data_to_server = '('+str(round(x*100, 1))+','+str(round(y*100, 1))+','+str(round(pitch, 1))+')'
+        data_to_server = '('+str(round(x*100, 1))+','+str(round(z*100, 1))+','+str(round(pitch, 1))+')'
         write_to_server(data_to_server)
         
 
@@ -130,4 +130,3 @@ while cap.isOpened():
 
 cap.release()
 cv2.destroyAllWindows()
-

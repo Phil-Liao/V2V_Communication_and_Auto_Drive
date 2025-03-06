@@ -11,21 +11,25 @@ nickname = 'A'
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(('192.168.50.40', 7777))
 
+pose_BC = None
+
 # Listening to Server and Sending Nickname
 def receive():
-    try:
-        # Receive Message From Server
-        # If 'NICK' Send Nickname
-        message = client.recv(1024).decode('ascii')
-        if message == 'NICK':
-            client.send(nickname.encode('ascii'))
-        elif message[:len(nickname)] != nickname:
-            return message
-    except:
-        # Close Connection When Error
-        client.close()
-        print("[DISCONNECTED] An error occurred.")
-    return None
+    while True:
+        try:
+            # Receive Message From Server
+            # If 'NICK' Send Nickname
+            message = client.recv(1024).decode('ascii')
+            if message == 'NICK':
+                client.send(nickname.encode('ascii'))
+            elif message[:len(nickname)] != nickname:
+                global pose_BC
+                pose_BC = message
+        except:
+            # Close Connection When Error
+            client.close()
+            print("[DISCONNECTED] An error occured.")
+            break
 
 def pose_to_matrix(pose):
     """
@@ -73,11 +77,72 @@ tag_size = 0.045  # 10cm
 # 初始化 AprilTag 偵測器
 detector = apriltag.Detector(families='tag36h11')
 
+receive_thread = threading.Thread(target=receive)
+receive_thread.start()
+
 # 開啟攝影機
-cap = cv2.VideoCapture(1)  # 0 代表預設攝影機
+cap = cv2.VideoCapture(0)  # 0 代表預設攝影機
 
 while cap.isOpened():
-    pose_BC = receive()
+    ret, frame = cap.read()
+    if not ret:
+        client.close()
+        break
+    # 轉為灰階圖像（AprilTag 偵測器需要灰階輸入）
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    # 偵測 AprilTag
+    detections = detector.detect(gray)
+    for detection in detections:
+        # 取得四個角點
+        corners = np.array(detection.corners, dtype=np.float32)
+
+        # 確保座標為整數，避免 OpenCV 錯誤
+        for i in range(4):
+            pt1 = tuple(map(int, corners[i]))  
+            pt2 = tuple(map(int, corners[(i + 1) % 4]))  
+            cv2.line(frame, pt1, pt2, (0, 255, 0), 2)
+
+        # 設定 3D 物理世界座標（AprilTag 的四個角）
+        tag_3d_points = np.array([
+            [-tag_size / 2, -tag_size / 2, 0],  # 左上
+            [ tag_size / 2, -tag_size / 2, 0],  # 右上
+            [ tag_size / 2,  tag_size / 2, 0],  # 右下
+            [-tag_size / 2,  tag_size / 2, 0]   # 左下
+        ], dtype=np.float32)
+
+        # 計算 3D 位置與旋轉資訊
+        _, rvec, tvec = cv2.solvePnP(tag_3d_points, corners, camera_matrix, dist_coeffs)
+
+        # 取得物品的 3D 位置
+        x, y, z = tvec.flatten()
+
+        # 轉換旋轉向量 (rvec) 為旋轉矩陣
+        R, _ = cv2.Rodrigues(rvec)
+
+        # 計算歐拉角 (Roll, Pitch, Yaw)
+        sy = np.sqrt(R[0, 0] ** 2 + R[1, 0] ** 2)
+        singular = sy < 1e-6
+
+        if not singular:
+            roll = np.arctan2(R[2, 1], R[2, 2])  # X 軸旋轉 (Roll)
+            pitch = np.arctan2(-R[2, 0], sy)     # Y 軸旋轉 (Pitch)
+            yaw = np.arctan2(R[1, 0], R[0, 0])   # Z 軸旋轉 (Yaw)
+        else:
+            roll = np.arctan2(-R[1, 2], R[1, 1])
+            pitch = np.arctan2(-R[2, 0], sy)
+            yaw = 0
+
+        # 轉換弧度為角度
+        roll = np.degrees(roll)
+        pitch = np.degrees(pitch)
+        yaw = np.degrees(yaw)
+
+        # 顯示位置與轉向資訊
+        text1 = f"X: {x*100:.0f} cm, Y: {y*100:.0f} cm, Z: {z*100:.0f} cm"
+        text2 = f"Roll: {roll:.2f} deg, Pitch: {pitch:.2f} deg, Yaw: {yaw:.2f} deg"
+
+        cv2.putText(frame, text1, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+        cv2.putText(frame, text2, (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
     if pose_BC:
         try:
             start = pose_BC.find("(") + 1  # Find the opening parenthesis and move past it
@@ -88,78 +153,23 @@ while cap.isOpened():
             print(f"Error parsing pose_BC: {e}")
             continue
 
-        ret, frame = cap.read()
-        if not ret:
-            client.close()
-            break
+        
 
-        # 轉為灰階圖像（AprilTag 偵測器需要灰階輸入）
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-        # 偵測 AprilTag
-        detections = detector.detect(gray)
-
-        for detection in detections:
-            # 取得四個角點
-            corners = np.array(detection.corners, dtype=np.float32)
-
-            # 確保座標為整數，避免 OpenCV 錯誤
-            for i in range(4):
-                pt1 = tuple(map(int, corners[i]))  
-                pt2 = tuple(map(int, corners[(i + 1) % 4]))  
-                cv2.line(frame, pt1, pt2, (0, 255, 0), 2)
-
-            # 設定 3D 物理世界座標（AprilTag 的四個角）
-            tag_3d_points = np.array([
-                [-tag_size / 2, -tag_size / 2, 0],  # 左上
-                [ tag_size / 2, -tag_size / 2, 0],  # 右上
-                [ tag_size / 2,  tag_size / 2, 0],  # 右下
-                [-tag_size / 2,  tag_size / 2, 0]   # 左下
-            ], dtype=np.float32)
-
-            # 計算 3D 位置與旋轉資訊
-            _, rvec, tvec = cv2.solvePnP(tag_3d_points, corners, camera_matrix, dist_coeffs)
-
-            # 取得物品的 3D 位置
-            x, y, z = tvec.flatten()
-
-            # 轉換旋轉向量 (rvec) 為旋轉矩陣
-            R, _ = cv2.Rodrigues(rvec)
-
-            # 計算歐拉角 (Roll, Pitch, Yaw)
-            sy = np.sqrt(R[0, 0] ** 2 + R[1, 0] ** 2)
-            singular = sy < 1e-6
-
-            if not singular:
-                roll = np.arctan2(R[2, 1], R[2, 2])  # X 軸旋轉 (Roll)
-                pitch = np.arctan2(-R[2, 0], sy)     # Y 軸旋轉 (Pitch)
-                yaw = np.arctan2(R[1, 0], R[0, 0])   # Z 軸旋轉 (Yaw)
-            else:
-                roll = np.arctan2(-R[1, 2], R[1, 1])
-                pitch = np.arctan2(-R[2, 0], sy)
-                yaw = 0
-
-            # 轉換弧度為角度
-            roll = np.degrees(roll)
-            pitch = np.degrees(pitch)
-            yaw = np.degrees(yaw)
-
-            # 顯示位置與轉向資訊
-            text1 = f"X: {x*100:.0f} cm, Y: {y*100:.0f} cm, Z: {z*100:.0f} cm"
-            text2 = f"Roll: {roll:.2f} deg, Pitch: {pitch:.2f} deg, Yaw: {yaw:.2f} deg"
-
-            cv2.putText(frame, text1, (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-            cv2.putText(frame, text2, (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-
-            pose_AC = compute_pose((x*100, y*100, pitch*100), pose_BC)
-            print("A 到 C 的相對位移和朝向 (x, y, theta [deg]):")
-            print(pose_AC)
     
-        # 顯示影像
-        cv2.imshow("AprilTag Detection", frame)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        
+
+
+    if pose_BC and detections:
+        pose_AC = compute_pose((x*100, y*100, pitch*100), pose_BC)
+        print("A 到 C 的相對位移和朝向 (x, y, theta [deg]):")
+        print(pose_AC)
+    
+    # 顯示影像
+    cv2.imshow("AprilTag Detection", frame)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
 cap.release()
 cv2.destroyAllWindows()
