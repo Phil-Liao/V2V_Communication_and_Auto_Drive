@@ -9,7 +9,7 @@ nickname = 'B' #Name of the Car
 
 # Connecting To Server
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(('192.168.50.40', 7777))
+client.connect(('192.168.50.32', 7777))
 
 # Listening to Server and Sending Nickname
 def receive():
@@ -40,13 +40,11 @@ receive_thread.start()
 
 
 
-# 設定相機內參 (根據相機校正調整)
-camera_matrix = np.array([[797.19922282, 0, 319.75614916],  # fx
-                          [0, 801.8848903, 259.20202143],  # fy
-                          [0, 0, 1]])     # cx, cy
-dist_coeffs = np.array([[3.74005891e-02, -1.96034587e+00 ,-2.19501972e-03  ,2.93313263e-03
-   ,2.10149607e+01]]) # 假設無畸變，若有請填入相機校正值
-
+# --- 設定相機內參 (根據相機校正結果調整) --- #cam2
+camera_matrix = np.array([[829.440377 , 0, 286.05353691],      # fx
+                          [0, 831.41284763, 217.23956951],     # fy
+                          [0, 0, 1]])       # cx, cy
+dist_coeffs = np.array([[-9.51794729e-02,3.28574195e+00 ,-4.89868929e-03 ,-8.73478551e-03 ,-1.99644676e+01]], dtype=np.float32)
 # 設定 AprilTag 大小 (單位：公尺)
 tag_size = 0.056  # 5.6cm
 

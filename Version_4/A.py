@@ -9,7 +9,7 @@ nickname = 'A'
 
 # Connecting To Server
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(('192.168.50.40', 7777))
+client.connect(('192.68.50.32', 7777))
 
 pose_BC = None
 
